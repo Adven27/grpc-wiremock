@@ -7,7 +7,7 @@ grpc-wiremock starts a grpc server generated based on provided proto files which
 2. WireMock server works on `http://localhost:8888`
 
 ## Quick Usage
-- Run `docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto grpc-wiremock`
+- Run `docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto adven27/grpc-wiremock`
 - Stub 
 ```
 curl -X POST http://localhost:8888/__admin/mappings \
