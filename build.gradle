@@ -1,0 +1,66 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.3.0.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+}
+
+apply plugin: 'com.google.protobuf'
+
+group = 'io.adven.grpc.wiremock'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+def grpcVersion = '1.29.0'
+def protobufVersion = '3.12.1'
+def protocVersion = protobufVersion
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation "io.grpc:grpc-all:${grpcVersion}"
+    implementation 'com.github.tomakehurst:wiremock-standalone:2.26.3'
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
+    plugins { grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" } }
+    generateProtoTasks { all()*.plugins { grpc { outputSubDir = 'java' } } }
+    generatedFilesBaseDir = 'src'
+}
+
+sourceSets.main.proto.srcDir '/proto'
+
+task generateJava(type: Copy) {
+    String pkg
+    String srv
+    doFirst {
+        new FileNameFinder().getFileNames("$projectDir/src/main/java", '**/*Grpc.java').forEach {
+            def path = new File(it).path
+            def relativePath = path.split("src/main/java/")[1]
+            pkg = relativePath.substring(0, relativePath.lastIndexOf("/")).replace("/", ".")
+            srv = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
+            println "Found $path: "
+            println "Parsed package = [$pkg]"
+            println "Parsed service = [$srv]"
+        }
+    }
+    from "src/template/java"
+    into "src/main/java/io/adven/grpc/wiremock"
+    filter { it.replace("@package@", pkg).replace("@service@", srv) }
+}
+
+compileJava.dependsOn 'generateJava'
+generateJava.dependsOn 'generateProto'
