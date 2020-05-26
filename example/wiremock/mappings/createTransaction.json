@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/WalletService/createTransaction"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "transactions": [
+        {
+          "userId": "{{jsonPath request.body '$.transactions[0].userId'}}",
+          "currency": "{{jsonPath request.body '$.transactions[0].currency'}}",
+          "amount": {
+            "decimal": "{{jsonPath request.body '$.transactions[0].amount.decimal'}}"
+          }
+        }
+      ]
+    }
+  }
+}

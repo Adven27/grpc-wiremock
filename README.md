@@ -12,7 +12,7 @@ grpc-wiremock starts a grpc server generated based on provided proto files which
 ## Quick Usage
 1) Run 
 ```posh
-docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto adven27/grpc-wiremock
+docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example/proto:/proto -v $(pwd)/example/wiremock:/wiremock adven27/grpc-wiremock
 ```
 
 2) Stub 

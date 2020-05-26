@@ -1,0 +1,14 @@
+{
+  "balance": {
+    "amount": {
+      "value": {
+        "decimal": "0.0"
+      },
+      "value_present": true
+    },
+    "currency": {
+      "value": "ANY",
+      "value_present": false
+    }
+  }
+}

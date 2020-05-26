@@ -1,0 +1,10 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/BalanceService/getUserBalance"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "no-balance.json"
+  }
+}

@@ -9,6 +9,7 @@ import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -21,15 +22,21 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 @Component
 public class HttpMock {
-    private final WireMockServer server = mockServer();
+    private final static WireMockServer SERVER = new WireMockServer(
+        wireMockConfig()
+            .usingFilesUnderDirectory("/wiremock")
+            .extensions(new ResponseTemplateTransformer(true))
+            .port(8888)
+    );
 
-    public HttpMock() {
-        server.start();
+    @PostConstruct
+    public void init() {
+        SERVER.start();
     }
 
     @PreDestroy
     public void destroy() {
-        server.stop();
+        SERVER.stop();
     }
 
     public Message send(Object message, String path, Class<?> aClass) throws IOException, InterruptedException {
@@ -38,7 +45,7 @@ public class HttpMock {
 
     private HttpResponse<String> request(String path, Object message) throws IOException, InterruptedException {
         final HttpResponse<String> response = HttpClient.newHttpClient().send(
-            HttpRequest.newBuilder().uri(URI.create(server.baseUrl() + "/" + path)).POST(asJson(message)).build(),
+            HttpRequest.newBuilder().uri(URI.create(SERVER.baseUrl() + "/" + path)).POST(asJson(message)).build(),
             HttpResponse.BodyHandlers.ofString()
         );
         if (response.statusCode() != 200) {
@@ -49,10 +56,6 @@ public class HttpMock {
 
     private HttpRequest.BodyPublisher asJson(Object arg) throws IOException {
         return HttpRequest.BodyPublishers.ofString(ProtoJsonUtil.toJson((MessageOrBuilder) arg));
-    }
-
-    private static WireMockServer mockServer() {
-        return new WireMockServer(wireMockConfig().extensions(new ResponseTemplateTransformer(true)).port(8888));
     }
 
     private static final class ProtoJsonUtil {
