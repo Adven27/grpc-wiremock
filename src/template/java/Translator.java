@@ -25,11 +25,5 @@ public class Translator{
         }
 
         @decorate_services@
-
-        private Class<?> respType(String name, String byClass) throws ClassNotFoundException {
-            return Arrays.stream(Class.forName(byClass).getMethods())
-                .filter(method -> method.getName().equals(name))
-                .findFirst().orElseThrow().getReturnType();
-        }
     }
 }
