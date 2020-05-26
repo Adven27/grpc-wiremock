@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/WalletService/searchTransaction"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "transactions": [
+        {
+          "userId": "1",
+          "currency": "EUR",
+          "amount": {
+            "decimal": "100"
+          }
+        },
+        {
+          "userId": "2",
+          "currency": "EUR",
+          "amount": {
+            "decimal": "200"
+          }
+        }
+      ]
+    }
+  }
+}

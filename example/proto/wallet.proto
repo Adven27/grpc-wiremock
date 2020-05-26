@@ -7,6 +7,7 @@ package api.wallet;
 
 service WalletService {
   rpc createTransaction (CreateTransactionRequest) returns (CreateTransactionResponse) {}
+  rpc searchTransaction (SearchTransactionRequest) returns (stream SearchTransactionResponse) {}
 }
 
 service BalanceService {
@@ -47,4 +48,13 @@ message TransactionResponse {
   string currency = 3;
   common.proto.ProtoBigDecimal amount = 4;
   common.proto.ProtoTimestamp transactionDate = 5;
+}
+
+message SearchTransactionRequest {
+  common.proto.ProtoTimestamp from = 1;
+  common.proto.ProtoTimestamp to = 2;
+}
+
+message SearchTransactionResponse {
+  repeated TransactionResponse transactions = 1;
 }
