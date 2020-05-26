@@ -8,12 +8,12 @@ grpc-wiremock starts a grpc server generated based on provided proto files which
 
 ## Quick Usage
 1) Run 
-```
+```posh
 docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto adven27/grpc-wiremock
 ```
 
 2) Stub 
-```
+```json
 curl -X POST http://localhost:8888/__admin/mappings \
   -d '{
     "request": {
@@ -36,12 +36,12 @@ curl -X POST http://localhost:8888/__admin/mappings \
 ```
 
 3) Check 
-```
+```posh
 grpcurl -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
 ```
 
 Should get response:
-```
+```json
 {
   "balance": {
     "amount": {
