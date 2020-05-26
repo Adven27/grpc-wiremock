@@ -1,5 +1,6 @@
 package io.adven.grpc.wiremock;
 
+import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -12,15 +13,19 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
+import static io.grpc.ServerBuilder.forPort;
+import static java.util.stream.Collectors.joining;
+
 @SpringBootApplication
-public class GrpcWiremockApplication implements CommandLineRunner {
-    private static final Logger LOG = LoggerFactory.getLogger(GrpcWiremockApplication.class);
+public class GrpcWiremock implements CommandLineRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(GrpcWiremock.class);
     private final GrpcServer server;
 
-    public GrpcWiremockApplication(GrpcServer server) {
+    public GrpcWiremock(GrpcServer server) {
         this.server = server;
     }
 
@@ -31,22 +36,28 @@ public class GrpcWiremockApplication implements CommandLineRunner {
 
     @Service
     public static class GrpcServer {
-        private final ServiceImpl service;
+        private final List<BindableService> services;
         private Server server;
         private final CountDownLatch latch;
 
-        public GrpcServer(ServiceImpl service) {
-            this.service = service;
+        public GrpcServer(List<BindableService> services) {
+            this.services = services;
             this.latch = new CountDownLatch(1);
         }
 
         public void start(int port) throws IOException {
-            server = ServerBuilder.forPort(port)
-                .addService(service)
+            ServerBuilder<?> builder = forPort(port)
                 .intercept(new ExceptionHandler())
-                .addService(ProtoReflectionService.newInstance())
-                .build().start();
+                .addService(ProtoReflectionService.newInstance());
+            services.forEach(builder::addService);
+            server = builder.build().start();
+            LOG.info(summary(server));
             startDaemonAwaitThread();
+        }
+
+        private String summary(Server server) {
+            return "Started " + server + "\nRegistered services:\n" +
+                server.getServices().stream().map(s -> " * " + s.getServiceDescriptor().getName()).collect(joining("\n"));
         }
 
         private void startDaemonAwaitThread() {
@@ -81,6 +92,6 @@ public class GrpcWiremockApplication implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(GrpcWiremockApplication.class, args);
+        SpringApplication.run(GrpcWiremock.class, args);
     }
 }

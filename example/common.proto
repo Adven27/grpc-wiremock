@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package common.proto;
+
+message ProtoBigDecimal {
+  string decimal = 1;
+}
+
+message NullableProtoBigDecimal {
+    ProtoBigDecimal value = 1;
+    bool value_present = 2;
+}
+
+message ProtoTimestamp {
+    string time = 1;
+}
+
+message NullableString {
+    string value = 1;
+    bool value_present = 2;
+}

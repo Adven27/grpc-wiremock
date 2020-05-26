@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+package api.wallet;
+
+service WalletService {
+  rpc createTransaction (CreateTransactionRequest) returns (CreateTransactionResponse) {}
+}
+
+service BalanceService {
+  rpc getUserBalance (UserBalanceRequest) returns (UserBalanceResponse) {}
+}
+
+message UserBalanceRequest {
+  uint64 id = 1;
+  string currency = 2;
+}
+
+message UserBalanceResponse {
+  UserBalance balance = 1;
+}
+
+message UserBalance {
+  common.proto.NullableProtoBigDecimal amount = 1;
+  common.proto.NullableString currency = 2;
+}
+
+message CreateTransactionRequest {
+  repeated Transaction transactions = 1;
+}
+
+message CreateTransactionResponse {
+  repeated TransactionResponse transactions = 1;
+}
+
+message Transaction {
+  uint64 userId = 1;
+  string currency = 2;
+  common.proto.ProtoBigDecimal amount = 3;
+}
+
+message TransactionResponse {
+  uint64 id = 1;
+  uint64 userId = 2;
+  string currency = 3;
+  common.proto.ProtoBigDecimal amount = 4;
+  common.proto.ProtoTimestamp transactionDate = 5;
+}

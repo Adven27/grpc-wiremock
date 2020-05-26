@@ -7,38 +7,54 @@ grpc-wiremock starts a grpc server generated based on provided proto files which
 2. WireMock server works on `http://localhost:8888`
 
 ## Quick Usage
-- Run `docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto adven27/grpc-wiremock`
-- Stub 
+1) Run 
+```
+docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example:/proto adven27/grpc-wiremock
+```
+
+2) Stub 
 ```
 curl -X POST http://localhost:8888/__admin/mappings \
   -d '{
     "request": {
         "method": "POST",
-        "url": "/",
+        "url": "/BalanceService/getUserBalance",
         "bodyPatterns" : [ {
-            "equalToJson" : { "greeting": "World" }
+            "equalToJson" : { "id": "1", "currency": "EUR" }
         } ]
     },
     "response": {
         "status": 200,
         "jsonBody": { 
-            "reply": "Hello World", 
-            "number": [1, 2] 
+            "balance": { 
+                "amount": { "value": { "decimal" : "100.0" }, "value_present": true },
+                "currency": { "value": "EUR", "value_present": true }
+            } 
         }
     }
 }'
 ```
 
-- Check `grpcurl -plaintext -d '{"greeting": "World"}' localhost:50000 hello.HelloService/sayHello`
+3) Check 
+```
+grpcurl -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
+```
 
-Response:
+Should get response:
 ```
 {
-  "reply": "Hello World",
-  "number": [
-    1,
-    2
-  ]
+  "balance": {
+    "amount": {
+      "value": {
+        "decimal": "100.0"
+      },
+      "value_present": true
+    },
+    "currency": {
+      "value": "EUR",
+      "value_present": true
+    }
+  }
 }
 ```
 ## Stubbing

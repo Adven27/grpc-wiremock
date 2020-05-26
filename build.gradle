@@ -44,22 +44,37 @@ protobuf {
 sourceSets.main.proto.srcDir '/proto'
 
 task generateJava(type: Copy) {
-    String pkg
-    String srv
+    def decorate_services = ""
+    def import_services = ""
+    def services = ""
     doFirst {
+        def callDecoratorTemplate = """
+        @Around("execution(* @package@.@service@Grpc.@service@ImplBase.*(..))")
+        public void redirect@service@(ProceedingJoinPoint jp) throws Throwable {
+            Object[] args = jp.getArgs();
+            String method = jp.getStaticPart().getSignature().getName();
+            ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
+            observer.onNext(httpMock.send(args[0], "@service@/" + method, respType(method, "@package@.@service@Grpc\$@service@BlockingStub")));
+            observer.onCompleted();
+        }"""
+        def importServiceTemplate = "import @package@.@service@Grpc;\n"
+        def serviceTemplate = "@Service class @service@ extends @service@Grpc.@service@ImplBase {}\n"
         new FileNameFinder().getFileNames("$projectDir/src/main/java", '**/*Grpc.java').forEach {
             def path = new File(it).path
             def relativePath = path.split("src/main/java/")[1]
-            pkg = relativePath.substring(0, relativePath.lastIndexOf("/")).replace("/", ".")
-            srv = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
+            def pkg = relativePath.substring(0, relativePath.lastIndexOf("/")).replace("/", ".")
+            def srv = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
             println "Found $path: "
-            println "Parsed package = [$pkg]"
-            println "Parsed service = [$srv]"
+            println "Parsed package = [$pkg] and service = [$srv]"
+
+            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv)
+            import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
+            services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv)
         }
     }
     from "src/template/java"
     into "src/main/java/io/adven/grpc/wiremock"
-    filter { it.replace("@package@", pkg).replace("@service@", srv) }
+    filter { it.replace("@import_services@", import_services).replace("@services@", services).replace("@decorate_services@", decorate_services) }
 }
 
 compileJava.dependsOn 'generateJava'

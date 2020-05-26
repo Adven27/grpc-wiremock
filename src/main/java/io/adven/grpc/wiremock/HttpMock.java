@@ -32,13 +32,13 @@ public class HttpMock {
         server.stop();
     }
 
-    public Message send(Object message, Class<?> aClass) throws IOException, InterruptedException {
-        return ProtoJsonUtil.fromJson(request(message).body(), aClass);
+    public Message send(Object message, String path, Class<?> aClass) throws IOException, InterruptedException {
+        return ProtoJsonUtil.fromJson(request(path, message).body(), aClass);
     }
 
-    private HttpResponse<String> request(Object message) throws IOException, InterruptedException {
+    private HttpResponse<String> request(String path, Object message) throws IOException, InterruptedException {
         final HttpResponse<String> response = HttpClient.newHttpClient().send(
-            HttpRequest.newBuilder().uri(URI.create(server.baseUrl())).POST(asJson(message)).build(),
+            HttpRequest.newBuilder().uri(URI.create(server.baseUrl() + "/" + path)).POST(asJson(message)).build(),
             HttpResponse.BodyHandlers.ofString()
         );
         if (response.statusCode() != 200) {
