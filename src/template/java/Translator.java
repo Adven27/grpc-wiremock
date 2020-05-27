@@ -27,7 +27,7 @@ public class Translator{
             Object[] args = jp.getArgs();
             String method = jp.getStaticPart().getSignature().getName();
             ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
-            observer.onNext(httpMock.send(args[0], service + method, respTypes.get(method)));
+            observer.onNext(httpMock.send(args[0], service + "/" + method, respTypes.get(method)));
             observer.onCompleted();
         }
         @decorate_services@

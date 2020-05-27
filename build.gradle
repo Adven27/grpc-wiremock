@@ -53,9 +53,8 @@ task generateJava(type: Copy) {
             @resp_types@
         }}; 
         @Around("execution(* @package@.@service@Grpc.@service@ImplBase.*(..))")
-        public void redirect@service@(ProceedingJoinPoint jp) throws Throwable {
-            redirect(jp, "@service@", @service@RespTypes);
-        }"""
+        public void redirect@service@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@service@", @service@RespTypes); }
+        """
         def importServiceTemplate = "import @package@.@service@Grpc;\n"
         def serviceTemplate = "@Service class @service@ extends @service@Grpc.@service@ImplBase {}\n"
         new FileNameFinder().getFileNames("$projectDir/src/main/java", '**/*Grpc.java').forEach {

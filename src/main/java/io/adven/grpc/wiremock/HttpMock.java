@@ -1,12 +1,15 @@
 package io.adven.grpc.wiremock;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -22,8 +25,10 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 @Component
 public class HttpMock {
+    private static final Logger LOG = LoggerFactory.getLogger(HttpMock.class);
     private final static WireMockServer SERVER = new WireMockServer(
         wireMockConfig()
+            .notifier(new Slf4jNotifier(true))
             .usingFilesUnderDirectory("/wiremock")
             .extensions(new ResponseTemplateTransformer(true))
             .port(8888)
@@ -44,6 +49,7 @@ public class HttpMock {
     }
 
     private HttpResponse<String> request(String path, Object message) throws IOException, InterruptedException {
+        LOG.info("Grpc request {}:\n{}", path, message);
         final HttpResponse<String> response = HttpClient.newHttpClient().send(
             HttpRequest.newBuilder().uri(URI.create(SERVER.baseUrl() + "/" + path)).POST(asJson(message)).build(),
             HttpResponse.BodyHandlers.ofString()
@@ -66,9 +72,12 @@ public class HttpMock {
         @SuppressWarnings({"unchecked", "rawtypes"})
         static <T extends Message> T fromJson(String json, Class<?> clazz) {
             try {
+                LOG.info("Converting to {} json:\n{}", clazz, json);
                 AbstractMessage.Builder builder = (AbstractMessage.Builder) clazz.getMethod("newBuilder").invoke(null);
                 JsonFormat.parser().merge(json, builder);
-                return (T) builder.build();
+                T result = (T) builder.build();
+                LOG.info("Grpc response:\n{}", result);
+                return result;
             } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | InvalidProtocolBufferException e) {
                 throw new IllegalArgumentException("Failed to convert " + json + " to " + clazz, e);
             }
