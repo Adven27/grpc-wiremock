@@ -49,16 +49,12 @@ task generateJava(type: Copy) {
     def services = ""
     doFirst {
         def callDecoratorTemplate = """
-        private final Map<String, Class> @service@RespTypes = Map.of(
-           @resp_types@ 
-        );
+        private final Map<String, Class> @service@RespTypes = new HashMap<>(){{
+            @resp_types@
+        }}; 
         @Around("execution(* @package@.@service@Grpc.@service@ImplBase.*(..))")
         public void redirect@service@(ProceedingJoinPoint jp) throws Throwable {
-            Object[] args = jp.getArgs();
-            String method = jp.getStaticPart().getSignature().getName();
-            ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
-            observer.onNext(httpMock.send(args[0], "@service@/" + method, @service@RespTypes.get(method)));
-            observer.onCompleted();
+            redirect(jp, "@service@", @service@RespTypes);
         }"""
         def importServiceTemplate = "import @package@.@service@Grpc;\n"
         def serviceTemplate = "@Service class @service@ extends @service@Grpc.@service@ImplBase {}\n"
@@ -84,7 +80,7 @@ task generateJava(type: Copy) {
                 text = rest
             }
             decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv)
-                    .replace("@resp_types@", respTypes.collect { k, v -> "\"$k\", $v" }.join(",\n"))
+                    .replace("@resp_types@", respTypes.collect { k, v -> "put(\"$k\", $v);" }.join("\n"))
             import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
             services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv)
         }
