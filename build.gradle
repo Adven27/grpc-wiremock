@@ -79,7 +79,7 @@ task generateJava(type: Copy) {
                 text = rest
             }
             decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv)
-                    .replace("@resp_types@", respTypes.collect { k, v -> "put(\"$k\", $v);" }.join("\n"))
+                    .replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
             import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
             services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv)
         }
