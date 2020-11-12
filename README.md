@@ -1,5 +1,5 @@
-[![](https://images.microbadger.com/badges/version/adven27/grpc-wiremock.svg)](https://microbadger.com/images/adven27/grpc-wiremock "Get your own version badge on microbadger.com")
-[![](https://images.microbadger.com/badges/image/adven27/grpc-wiremock.svg)](https://microbadger.com/images/adven27/grpc-wiremock "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/javiyt/grpc-wiremock.svg)](https://microbadger.com/images/javiyt/grpc-wiremock "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/javiyt/grpc-wiremock.svg)](https://microbadger.com/images/javiyt/grpc-wiremock "Get your own image badge on microbadger.com")
 
 # Overview
 grpc-wiremock is a **mock server** for **GRPC** services implemented as a wrapper around the [WireMock](http://wiremock.org) http server.
@@ -12,7 +12,7 @@ grpc-wiremock starts a grpc server generated based on provided proto files which
 ## Quick Usage
 1) Run 
 ```posh
-docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example/proto:/proto -v $(pwd)/example/wiremock:/wiremock adven27/grpc-wiremock
+docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example/proto:/proto -v $(pwd)/example/wiremock:/wiremock javiyt/grpc-wiremock
 ```
 
 2) Stub 
