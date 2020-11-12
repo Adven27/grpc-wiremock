@@ -41,7 +41,7 @@ protobuf {
     generatedFilesBaseDir = 'src'
 }
 
-sourceSets.main.proto.srcDir '/proto'
+sourceSets.main.proto.srcDir './proto'
 
 task generateJava(type: Copy) {
     def decorate_services = ""
@@ -49,21 +49,22 @@ task generateJava(type: Copy) {
     def services = ""
     doFirst {
         def callDecoratorTemplate = """
-        private final Map<String, Class> @service@RespTypes = new HashMap<>(){{
+        private final Map<String, Class> @service@@version@RespTypes = new HashMap<>(){{
             @resp_types@
         }}; 
         @Around("execution(* @package@.@service@Grpc.@service@ImplBase.*(..))")
-        public void redirect@service@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@service@", @service@RespTypes); }
+        public void redirect@service@@version@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@service@@version@", @service@@version@RespTypes); }
         """
-        def importServiceTemplate = "import @package@.@service@Grpc;\n"
-        def serviceTemplate = "@Service class @service@ extends @service@Grpc.@service@ImplBase {}\n"
+        //def importServiceTemplate = "import @package@.@service@Grpc;\n"
+        def serviceTemplate = "@Service static class @service@@version@ extends @package@.@service@Grpc.@service@ImplBase {}\n"
         new FileNameFinder().getFileNames("$projectDir/src/main/java", '**/*Grpc.java').forEach {
             def file = new File(it)
             def relativePath = file.path.split("src/main/java/")[1]
             def pkg = relativePath.substring(0, relativePath.lastIndexOf("/")).replace("/", ".")
+            def version = pkg.substring(pkg.lastIndexOf(".")+1)
             def srv = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
             println "Found $path: "
-            println "Parsed package = [$pkg] and service = [$srv]"
+            println "Parsed package = [$pkg] and service = [$pkg.$srv]"
 
             def text = file.text
             def rpcMethodAnnotation = "@io.grpc.stub.annotations.RpcMethod("
@@ -78,10 +79,10 @@ task generateJava(type: Copy) {
                 respTypes[method] = descriptor.responseType
                 text = rest
             }
-            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv)
+            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv).replace("@version@", version)
                     .replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
-            import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
-            services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv)
+            //import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
+            services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv).replace("@version@", version)
         }
     }
     from "src/template/java"
