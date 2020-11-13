@@ -41,7 +41,7 @@ protobuf {
     generatedFilesBaseDir = 'src'
 }
 
-sourceSets.main.proto.srcDir './proto'
+sourceSets.main.proto.srcDir '/proto'
 
 task generateJava(type: Copy) {
     def decorate_services = ""
