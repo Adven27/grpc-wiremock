@@ -41,6 +41,11 @@ protobuf {
     generatedFilesBaseDir = 'src'
 }
 
+clean {
+    delete fileTree(dir: "src/main/java", exclude: "io/adven/grpc/wiremock")
+    delete "src/main/java/io/adven/grpc/wiremock/Translator.java"
+}
+
 sourceSets.main.proto.srcDir '/proto'
 
 task generateJava(type: Copy) {
