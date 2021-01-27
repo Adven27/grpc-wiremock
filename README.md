@@ -63,3 +63,28 @@ Should get response:
 ## Stubbing
 
 Stubbing should be done via [WireMock JSON API](http://wiremock.org/docs/stubbing/) 
+
+## How To:
+
+1. Change grpc server properties:
+
+Currently, following grpc server properties are supported:
+
+```properties
+GRPC_SERVER_MAXHEADERLISTSIZE
+GRPC_SERVER_MAXMESSAGESIZE
+GRPC_SERVER_MAXINBOUNDMETADATASIZE
+GRPC_SERVER_MAXINBOUNDMESSAGESIZE
+```
+<sub>*The first two are deprecated in favor of the last two</sub>
+
+Could be used like this:
+
+```shell
+docker run -e GRPC_SERVER_MAXHEADERLISTSIZE=1000 adven27/grpc-wiremock
+```
+
+2. Speed up container start
+
+In case you don't need to change proto files, you can build your own image with precompiled protos.  
+See an [example](/example/Dockerfile)
