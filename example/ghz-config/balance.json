@@ -1,0 +1,16 @@
+{
+  "proto": "../proto/wallet.proto",
+  "import-paths": ["../proto"],
+  "call": "api.wallet.BalanceService.getUserBalance",
+  "concurrency": 500,
+  "connections": 2,
+  "total": 5000,
+  "data": {"id": "1", "currency":  "EUR"},
+  "metadata": {
+    "trace_id": "{{.RequestNumber}}",
+    "timestamp": "{{.TimestampUnix}}"
+  },
+  "max-duration": "50s",
+  "host": "0.0.0.0:50000",
+  "insecure": true
+}

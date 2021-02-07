@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import static java.util.stream.Collectors.joining;
 
 @SpringBootApplication
-@EnableConfigurationProperties(ServerProperties.class)
+@EnableConfigurationProperties({ServerProperties.class, WiremockProperties.class})
 public class GrpcWiremock implements CommandLineRunner {
     private static final Logger LOG = LoggerFactory.getLogger(GrpcWiremock.class);
     private final GrpcServer server;
