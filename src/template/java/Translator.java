@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
-@import_services@
 
 @Configuration
 public class Translator{

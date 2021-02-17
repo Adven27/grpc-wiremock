@@ -31,7 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation "io.grpc:grpc-all:${grpcVersion}"
-    implementation 'com.github.tomakehurst:wiremock-standalone:2.26.3'
+    implementation 'com.github.tomakehurst:wiremock-standalone:2.27.2'
 }
 
 protobuf {
@@ -39,6 +39,11 @@ protobuf {
     plugins { grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" } }
     generateProtoTasks { all()*.plugins { grpc { outputSubDir = 'java' } } }
     generatedFilesBaseDir = 'src'
+}
+
+clean {
+    delete fileTree(dir: "src/main/java", exclude: "io/adven/grpc/wiremock")
+    delete "src/main/java/io/adven/grpc/wiremock/Translator.java"
 }
 
 sourceSets.main.proto.srcDir '/proto'
@@ -49,22 +54,24 @@ task generateJava(type: Copy) {
     def services = ""
     doFirst {
         def callDecoratorTemplate = """
-        private final Map<String, Class> @service@@version@RespTypes = new HashMap<>(){{
+        private final Map<String, Class> @fullServiceName@RespTypes = new HashMap<>(){{
             @resp_types@
         }}; 
-        @Around("execution(* @package@.@service@Grpc.@service@ImplBase.*(..))")
-        public void redirect@service@@version@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@service@@version@", @service@@version@RespTypes); }
+        @Around("execution(* @package@.@serviceName@Grpc.@serviceName@ImplBase.*(..))")
+        public void redirect@fullServiceName@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@serviceName@", @fullServiceName@RespTypes); }
         """
-        //def importServiceTemplate = "import @package@.@service@Grpc;\n"
-        def serviceTemplate = "@Service static class @service@@version@ extends @package@.@service@Grpc.@service@ImplBase {}\n"
+
+        def importServiceTemplate = "import @package@.@serviceName@Grpc;\n"
+        def serviceTemplate = "@Service class @fullServiceName@ extends @package@.@serviceName@Grpc.@serviceName@ImplBase {}\n"
         new FileNameFinder().getFileNames("$projectDir/src/main/java", '**/*Grpc.java').forEach {
             def file = new File(it)
             def relativePath = file.path.split("src/main/java/")[1]
             def pkg = relativePath.substring(0, relativePath.lastIndexOf("/")).replace("/", ".")
-            def version = pkg.substring(pkg.lastIndexOf(".")+1)
-            def srv = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
-            println "Found $path: "
-            println "Parsed package = [$pkg] and service = [$pkg.$srv]"
+            def serviceName = relativePath.substring(relativePath.lastIndexOf("/") + 1).replace("Grpc.java", "")
+            def fullServiceName = pkg.replaceAll( "([\\._])([A-Za-z0-9])", { Object[] s -> s[2].toUpperCase() } ).capitalize() + serviceName
+
+            println "Found $relativePath: "
+            println "Parsed package = [$pkg], serviceName = [$serviceName] and fullServiceName = [$fullServiceName]"
 
             def text = file.text
             def rpcMethodAnnotation = "@io.grpc.stub.annotations.RpcMethod("
@@ -79,10 +86,11 @@ task generateJava(type: Copy) {
                 respTypes[method] = descriptor.responseType
                 text = rest
             }
-            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@service@", srv).replace("@version@", version)
-                    .replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
-            //import_services += importServiceTemplate.replace("@package@", pkg).replace("@service@", srv)
-            services += serviceTemplate.replace("@package@", pkg).replace("@service@", srv).replace("@version@", version)
+            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName)
+                    .replace("@fullServiceName@", fullServiceName).replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
+
+            import_services += importServiceTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName)
+            services += serviceTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName).replace("@fullServiceName@", fullServiceName)
         }
     }
     from "src/template/java"
