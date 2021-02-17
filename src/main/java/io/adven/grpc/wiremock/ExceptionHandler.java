@@ -23,6 +23,7 @@ public class ExceptionHandler implements ServerInterceptor {
             put(SC_UNAUTHORIZED, UNAUTHENTICATED);
             put(SC_FORBIDDEN, PERMISSION_DENIED);
             put(SC_NOT_FOUND, UNIMPLEMENTED);
+            put(SC_REQUEST_TIMEOUT, DEADLINE_EXCEEDED);
             put(SC_BAD_GATEWAY, UNAVAILABLE);
             put(SC_SERVICE_UNAVAILABLE, UNAVAILABLE);
             put(SC_GATEWAY_TIMEOUT, UNAVAILABLE);
