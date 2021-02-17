@@ -9,6 +9,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
+import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -65,9 +66,11 @@ public class HttpMock {
             HttpRequest.newBuilder().uri(URI.create(server.baseUrl() + "/" + path)).POST(asJson(message)).build(),
             HttpResponse.BodyHandlers.ofString()
         );
+
         if (response.statusCode() != 200) {
-            throw new IllegalArgumentException(response.body());
+            throw new HttpResponseException(response.statusCode(), response.body());
         }
+
         return response;
     }
 

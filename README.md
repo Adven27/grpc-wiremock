@@ -105,3 +105,45 @@ docker run \
     -e WIREMOCK_SERVER_VERBOSE=false \
     adven27/grpc-wiremock
 ```
+
+## Error codes
+When testing errors from the server side you can set up your stubs taking into account the following equivalences table:
+
+| HTTP Status Code           | gRPC Status Code   |
+|----------------------------|--------------------|
+| 400 Bad Request            | INTERNAL           |
+| 401 Unauthorized           | UNAUTHENTICATED    |
+| 403 Forbidden              | PERMISSION\_DENIED |
+| 404 Not Found              | UNIMPLEMENTED      |
+| 429 Too Many Requests      | UNAVAILABLE        |
+| 502 Bad Gateway            | UNAVAILABLE        |
+| 503 Service Unavailable    | UNAVAILABLE        |
+| 504 Gateway Timeout        | UNAVAILABLE        |
+| _All other codes_          | UNKNOWN            |
+
+Extracted from [HTTP to gRPC Status Code Mapping](https://github.com/grpc/grpc/edit/master/doc/http-grpc-status-mapping.md)
+
+Example stub:
+```json
+curl -X POST http://localhost:8888/__admin/mappings \
+  -d '{
+    "request": {
+        "method": "POST",
+        "url": "/BalanceService/getUserBalance",
+        "bodyPatterns" : [ {
+            "equalToJson" : { "id": "1", "currency": "EUR" }
+        } ]
+    },
+    "response": {
+        "status": 403,
+        "body": "you can't access here"
+    }
+}'
+```
+
+The response you will get when running the gRPC query is:
+```json
+{
+"error": "7 PERMISSION_DENIED: "
+}
+```
