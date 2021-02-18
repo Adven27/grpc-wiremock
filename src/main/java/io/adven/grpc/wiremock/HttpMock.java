@@ -38,7 +38,9 @@ public class HttpMock {
             .notifier(new Slf4jNotifier(properties.isVerbose()))
             .stubRequestLoggingDisabled(properties.isStubRequestLoggingDisabled())
             .asynchronousResponseEnabled(properties.isAsynchronousResponseEnabled())
-            .asynchronousResponseThreads(properties.getAsynchronousResponseThreads());
+            .asynchronousResponseThreads(properties.getAsynchronousResponseThreads())
+            .jettyAcceptors(properties.getJettyAcceptors())
+            .containerThreads(properties.getContainerThreads());
 
         if (properties.isDisableRequestJournal()) {
             config.disableRequestJournal();
