@@ -66,7 +66,7 @@ Stubbing should be done via [WireMock JSON API](http://wiremock.org/docs/stubbin
 
 ## How To:
 
-1. Change grpc server properties
+#### 1. Change grpc server properties
 
 Currently, following grpc server properties are supported<sup>*</sup>:
 
@@ -84,15 +84,15 @@ Could be used like this:
 docker run -e GRPC_SERVER_MAXHEADERLISTSIZE=1000 adven27/grpc-wiremock
 ```
 
-2. Speed up container start
+#### 2. Speed up container start
 
 In case you don't need to change proto files, you can build your own image with precompiled protos.  
 See an [example](/example/Dockerfile)
 
-3. Use in load testing
+#### 3. Use in load testing
 
 To increase performance some Wiremock related options may be tuned either directly or by enabling the "load" profile. 
-Next to commands are identical:
+Next two commands are identical:
 ```posh
 docker run -e SPRING_PROFILES_ACTIVE=load adven27/grpc-wiremock
 ```
