@@ -90,7 +90,27 @@ docker run -e GRPC_SERVER_MAXHEADERLISTSIZE=1000 adven27/grpc-wiremock
 In case you don't need to change proto files, you can build your own image with precompiled protos.  
 See an [example](/example/Dockerfile)
 
-#### 3. Use in load testing
+#### 3. Use with snappy compresser/decompresser
+
+Snappy support can be enabled using EXT_CODECS env variable as follows:
+```posh
+docker run -e EXT_CODECS=snappy adven27/grpc-wiremock
+```
+Also in docker-compose:
+```posh
+    image: adven27/grpc-wiremock
+    ports:
+      - "12085:50000" # grpc port
+      - "8088:8888" # http serve port
+    volumes:
+      - ./example/proto:/proto
+    environment:
+      - EXT_CODECS=snappy
+```
+<sub>*gzip compression supported by default</sub>
+
+
+#### 4. Use in load testing
 
 To increase performance some Wiremock related options may be tuned either directly or by enabling the "load" profile. 
 Next two commands are identical:
