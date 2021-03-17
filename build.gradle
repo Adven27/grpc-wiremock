@@ -21,6 +21,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation "io.grpc:grpc-all:${grpcVersion}"
+    implementation 'org.xerial.snappy:snappy-java:1.1.8.4'
     implementation 'com.github.tomakehurst:wiremock-standalone:2.27.2'
 }
 
