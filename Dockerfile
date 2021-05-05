@@ -4,6 +4,7 @@ RUN mkdir -p /proto
 RUN touch /proto/any.proto
 ENV GRADLE_USER_HOME /home/gradle/cache_home
 COPY build.gradle /home/gradle/java-code/
+COPY gradle.properties /home/gradle/java-code/
 WORKDIR /home/gradle/java-code
 RUN gradle build -i --no-daemon || return 0
 
