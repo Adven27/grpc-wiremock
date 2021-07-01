@@ -28,6 +28,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 public class HttpMock {
     private static final Logger LOG = LoggerFactory.getLogger(HttpMock.class);
     private final WireMockServer server;
+    private final HttpClient httpClient;
 
     public HttpMock(WiremockProperties properties) {
         WireMockConfiguration config = wireMockConfig()
@@ -43,6 +44,7 @@ public class HttpMock {
             config.disableRequestJournal();
         }
         server = new WireMockServer(config);
+        httpClient = HttpClient.newHttpClient();
     }
 
     @PostConstruct
@@ -61,7 +63,7 @@ public class HttpMock {
 
     private HttpResponse<String> request(String path, Object message) throws IOException, InterruptedException {
         LOG.info("Grpc request {}:\n{}", path, message);
-        final HttpResponse<String> response = HttpClient.newHttpClient().send(
+        final HttpResponse<String> response = httpClient.send(
             HttpRequest.newBuilder().uri(URI.create(server.baseUrl() + "/" + path)).POST(asJson(message)).build(),
             HttpResponse.BodyHandlers.ofString()
         );
