@@ -1,6 +1,6 @@
 [![Stability: Maintenance](https://masterminds.github.io/stability/maintenance.svg)](https://masterminds.github.io/stability/maintenance.html)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/adven27/grpc-wiremock?label=build&logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/builds)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.0.0?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.0.1?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
 
 # Overview
 grpc-wiremock is a **mock server** for **GRPC** services implemented as a wrapper around the [WireMock](http://wiremock.org) http server.
