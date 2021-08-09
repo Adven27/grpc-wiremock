@@ -86,7 +86,7 @@ Default error (not `200 OK`) mapping is based on https://github.com/googleapis/g
 And could be overridden or augmented by overriding or augmenting the following properties:
 ```yaml
 grpc:
-  error-сode-by:
+  error-code-by:
     http:
       status-code:
         400: INVALID_ARGUMENT
@@ -104,8 +104,8 @@ grpc:
 For example:
 ```posh
 docker run \
-    -e GRPC_ERROR-CODE-BY_HTTP_STATUS-CODE_400=OUT_OF_RANGE \
-    -e GRPC_ERROR-CODE-BY_HTTP_STATUS-CODE_510=DATA_LOSS \
+    -e GRPC_ERRORCODEBY_HTTP_STATUSCODE_400=OUT_OF_RANGE \
+    -e GRPC_ERRORCODEBY_HTTP_STATUSCODE_510=DATA_LOSS \
     adven27/grpc-wiremock
 ```
 ## How To:
