@@ -68,7 +68,7 @@ public class HttpMock {
             HttpResponse.BodyHandlers.ofString()
         );
         if (response.statusCode() != 200) {
-            throw new IllegalArgumentException(response.body());
+            throw new BadHttpResponseException(response.statusCode(), response.body());
         }
         return response;
     }

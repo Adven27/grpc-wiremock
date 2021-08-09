@@ -51,11 +51,35 @@ public class ExceptionHandler implements ServerInterceptor {
         }
 
         private void handleException(RuntimeException ex, ServerCall<ReqT, RespT> serverCall, Metadata metadata) {
-            serverCall.close(
-                ex instanceof IllegalArgumentException
-                    ? Status.INVALID_ARGUMENT.withDescription(ex.getMessage())
-                    : Status.UNKNOWN,
-                metadata);
+            Status status = Status.UNKNOWN;
+            if (ex instanceof BadHttpResponseException) {
+                status = mapStatusCode(((BadHttpResponseException) ex).getStatusCode()).withDescription(ex.getMessage());
+            } else if (ex instanceof IllegalArgumentException) {
+                status = Status.INVALID_ARGUMENT.withDescription(ex.getMessage());
+            }
+            serverCall.close(status, metadata);
+        }
+
+        // Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+        private Status mapStatusCode(int statusCode)
+        {
+            switch(statusCode) {
+                case 400: // Bad Request
+                    return Status.INVALID_ARGUMENT;
+                case 401: // Unauthorized
+                    return Status.UNAUTHENTICATED;
+                case 403: // Forbidden
+                    return Status.PERMISSION_DENIED;
+                case 404: // Not Found
+                    return Status.NOT_FOUND;
+                case 409: // Conflict
+                    return Status.ALREADY_EXISTS;
+                case 429: // Too Many Requests
+                    return Status.RESOURCE_EXHAUSTED;
+                case 500: // Internal Server Error
+                default:
+                    return Status.INTERNAL;
+            }
         }
     }
 }
