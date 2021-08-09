@@ -38,6 +38,18 @@ clean {
 }
 
 sourceSets.main.proto.srcDir '/proto'
+/*
+sourceSets {
+    main {
+        resources {
+            srcDir 'example'
+        }
+        proto {
+            srcDir 'example/proto'
+        }
+    }
+}
+*/
 
 task generateJava(type: Copy) {
     def decorate_services = ""
@@ -77,11 +89,17 @@ task generateJava(type: Copy) {
                 respTypes[method] = descriptor.responseType
                 text = rest
             }
-            decorate_services += callDecoratorTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName)
-                    .replace("@fullServiceName@", fullServiceName).replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
+            decorate_services += callDecoratorTemplate
+                    .replace("@package@", pkg)
+                    .replace("@serviceName@", serviceName)
+                    .replace("@fullServiceName@", fullServiceName)
+                    .replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
 
             import_services += importServiceTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName)
-            services += serviceTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName).replace("@fullServiceName@", fullServiceName)
+            services += serviceTemplate
+                    .replace("@package@", pkg)
+                    .replace("@serviceName@", serviceName)
+                    .replace("@fullServiceName@", fullServiceName)
         }
     }
     from "src/template/java"

@@ -1,4 +1,4 @@
-package io.adven.grpc.wiremock;
+package io.adven.grpc.wiremock.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;

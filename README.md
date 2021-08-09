@@ -40,7 +40,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
 ```
 
 3) Check 
-```posh
+```json
 grpcurl -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
 ```
 
@@ -65,6 +65,49 @@ Should get response:
 
 Stubbing should be done via [WireMock JSON API](http://wiremock.org/docs/stubbing/) 
 
+### Error mapping
+
+Default error (not `200 OK`) mapping is based on https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto :
+
+| HTTP Status Code         | GRPC Status       | 
+| ------------------------ |:-----------------:|
+| 400 Bad Request          | INVALID_ARGUMENT  |
+| 401 Unauthorized         | UNAUTHENTICATED   |
+| 403 Forbidden            | PERMISSION_DENIED |
+| 404 Not Found            | NOT_FOUND         |
+| 409 Conflict             | ALREADY_EXISTS    |
+| 429 Too Many Requests    | RESOURCE_EXHAUSTED|
+| 499 Client Closed Request| CANCELLED         |
+| 500 Internal Server Error| INTERNAL          |
+| 501 Not Implemented      | UNIMPLEMENTED     |
+| 503 Service Unavailable  | UNAVAILABLE       |
+| 504 Gateway Timeout      | DEADLINE_EXCEEDED |
+
+And could be overridden or augmented by overriding or augmenting the following properties:
+```yaml
+grpc:
+  error-сode-by:
+    http:
+      status-code:
+        400: INVALID_ARGUMENT
+        401: UNAUTHENTICATED
+        403: PERMISSION_DENIED
+        404: NOT_FOUND
+        409: ALREADY_EXISTS
+        429: RESOURCE_EXHAUSTED
+        499: CANCELLED
+        500: INTERNAL
+        501: UNIMPLEMENTED
+        503: UNAVAILABLE
+        504: DEADLINE_EXCEEDED
+```
+For example:
+```posh
+docker run \
+    -e GRPC_ERROR-CODE-BY_HTTP_STATUS-CODE_400=OUT_OF_RANGE \
+    -e GRPC_ERROR-CODE-BY_HTTP_STATUS-CODE_510=DATA_LOSS \
+    adven27/grpc-wiremock
+```
 ## How To:
 
 #### 1. Change grpc server properties
@@ -94,7 +137,7 @@ See an [example](/example/Dockerfile)
 
 Snappy support can be enabled using EXT_CODECS env variable as follows:
 ```posh
-docker run -e EXT_CODECS=snappy adven27/grpc-wiremock
+docker run -e EXTERNAL_CODECS="snappy, another" adven27/grpc-wiremock
 ```
 Also in docker-compose:
 ```posh
@@ -105,7 +148,7 @@ Also in docker-compose:
     volumes:
       - ./example/proto:/proto
     environment:
-      - EXT_CODECS=snappy
+      - EXTERNAL_CODECS=snappy
 ```
 <sub>*gzip compression supported by default</sub>
 

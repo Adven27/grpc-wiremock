@@ -4,22 +4,22 @@ import io.grpc.Codec;
 import io.grpc.CompressorRegistry;
 import io.grpc.DecompressorRegistry;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
 @Component
-@PropertySource("classpath:application.properties")
 public class CodecRegistry {
+    private final List<String> externalCodecs;
+    private final Map<String, Codec> codecs;
 
-    @Value("#{'${external.codecs}'.split(',')}")
-    private List<String> externalCodecs;
-    private Map<String, Codec> codecs;
-
-    public CodecRegistry(Map<String, Codec> codecs) {
+    public CodecRegistry(
+        @Value("${external.codecs:}") List<String> externalCodecs,
+        Map<String, Codec> codecs
+    ) {
         this.codecs = codecs;
+        this.externalCodecs = externalCodecs;
     }
 
     public CompressorRegistry compressorRegistry() {

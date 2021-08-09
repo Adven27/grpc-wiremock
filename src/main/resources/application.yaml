@@ -1,0 +1,44 @@
+spring:
+  main:
+    banner-mode: off
+#
+logging.level.io.grpc: info
+#
+wiremock:
+  server:
+    disableRequestJournal: false
+    asynchronousResponseEnabled: false
+    asynchronousResponseThreads: 10
+    stubRequestLoggingDisabled: false
+    verbose: true
+# Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+grpc:
+  server:
+    maxHeaderListSize: 1000
+  error-code-by:
+    http:
+      status-code:
+        400: INVALID_ARGUMENT
+        401: UNAUTHENTICATED
+        403: PERMISSION_DENIED
+        404: NOT_FOUND
+        409: ALREADY_EXISTS
+        429: RESOURCE_EXHAUSTED
+        499: CANCELLED
+        500: INTERNAL
+        501: UNIMPLEMENTED
+        503: UNAVAILABLE
+        504: DEADLINE_EXCEEDED
+
+---
+spring.config.activate.on-profile: load
+#
+logging.level.io.adven.grpc.wiremock.HttpMock: warn
+#
+wiremock:
+  server:
+    disableRequestJournal: true
+    asynchronousResponseEnabled: true
+    asynchronousResponseThreads: 10
+    stubRequestLoggingDisabled: true
+    verbose: false

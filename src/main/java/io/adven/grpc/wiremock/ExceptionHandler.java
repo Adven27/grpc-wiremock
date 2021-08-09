@@ -1,5 +1,6 @@
 package io.adven.grpc.wiremock;
 
+import io.adven.grpc.wiremock.properties.GrpcProperties;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -8,6 +9,11 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 
 public class ExceptionHandler implements ServerInterceptor {
+    private final GrpcProperties.ErrorCodeMapping errorCodeMapping;
+
+    public ExceptionHandler(GrpcProperties.ErrorCodeMapping errorCodeMapping) {
+        this.errorCodeMapping = errorCodeMapping;
+    }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
@@ -60,26 +66,12 @@ public class ExceptionHandler implements ServerInterceptor {
             serverCall.close(status, metadata);
         }
 
-        // Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
-        private Status mapStatusCode(int statusCode)
-        {
-            switch(statusCode) {
-                case 400: // Bad Request
-                    return Status.INVALID_ARGUMENT;
-                case 401: // Unauthorized
-                    return Status.UNAUTHENTICATED;
-                case 403: // Forbidden
-                    return Status.PERMISSION_DENIED;
-                case 404: // Not Found
-                    return Status.NOT_FOUND;
-                case 409: // Conflict
-                    return Status.ALREADY_EXISTS;
-                case 429: // Too Many Requests
-                    return Status.RESOURCE_EXHAUSTED;
-                case 500: // Internal Server Error
-                default:
-                    return Status.INTERNAL;
-            }
+        private Status mapStatusCode(int statusCode) {
+            return Status.fromCode(
+                Status.Code.valueOf(
+                    errorCodeMapping.getHttp().getStatusCode().getOrDefault(statusCode, "INTERNAL").toUpperCase()
+                )
+            );
         }
     }
 }
