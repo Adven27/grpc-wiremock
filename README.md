@@ -135,7 +135,7 @@ See an [example](/example/Dockerfile)
 
 #### 3. Use with snappy compresser/decompresser
 
-Snappy support can be enabled using EXT_CODECS env variable as follows:
+Snappy support can be enabled using `EXTERNAL_CODECS` env variable as follows:
 ```posh
 docker run -e EXTERNAL_CODECS="snappy, another" adven27/grpc-wiremock
 ```
