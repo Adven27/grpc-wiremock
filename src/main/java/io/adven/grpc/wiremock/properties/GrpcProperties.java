@@ -26,16 +26,22 @@ public class GrpcProperties {
     }
 
     public static class ServerProperties {
+        private final Integer port;
         private final DataSize maxHeaderListSize;
         private final DataSize maxMessageSize;
         private final DataSize maxInboundMetadataSize;
         private final DataSize maxInboundMessageSize;
 
-        public ServerProperties(DataSize maxHeaderListSize, DataSize maxMessageSize, DataSize maxInboundMetadataSize, DataSize maxInboundMessageSize) {
+        public ServerProperties(Integer port, DataSize maxHeaderListSize, DataSize maxMessageSize, DataSize maxInboundMetadataSize, DataSize maxInboundMessageSize) {
+            this.port = port;
             this.maxHeaderListSize = maxHeaderListSize;
             this.maxMessageSize = maxMessageSize;
             this.maxInboundMetadataSize = maxInboundMetadataSize;
             this.maxInboundMessageSize = maxInboundMessageSize;
+        }
+
+        public Integer getPort() {
+            return port;
         }
 
         public DataSize getMaxHeaderListSize() {

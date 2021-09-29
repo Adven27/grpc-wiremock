@@ -1,7 +1,6 @@
 package io.adven.grpc.wiremock;
 
 import io.adven.grpc.wiremock.properties.GrpcProperties;
-import io.adven.grpc.wiremock.properties.WiremockProperties;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
@@ -23,18 +22,21 @@ import java.util.concurrent.CountDownLatch;
 import static java.util.stream.Collectors.joining;
 
 @SpringBootApplication
-@EnableConfigurationProperties({GrpcProperties.class, WiremockProperties.class})
+@EnableConfigurationProperties({GrpcProperties.class})
 public class GrpcWiremock implements CommandLineRunner {
     private static final Logger LOG = LoggerFactory.getLogger(GrpcWiremock.class);
     private final GrpcServer server;
+    private final HttpMock httpMock;
 
-    public GrpcWiremock(GrpcServer server) {
+    public GrpcWiremock(GrpcServer server, HttpMock httpMock) {
         this.server = server;
+        this.httpMock = httpMock;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        server.start(50000);
+        httpMock.start();
+        server.start();
     }
 
     @Service
@@ -52,8 +54,8 @@ public class GrpcWiremock implements CommandLineRunner {
             this.latch = new CountDownLatch(1);
         }
 
-        public void start(int port) throws IOException {
-            NettyServerBuilder builder = NettyServerBuilder.forPort(port)
+        public void start() throws IOException {
+            NettyServerBuilder builder = NettyServerBuilder.forPort(grpcProperties.getServer().getPort())
                 .intercept(new ExceptionHandler(grpcProperties.getErrorCodeBy()))
                 .compressorRegistry(codecRegistry.compressorRegistry())
                 .decompressorRegistry(codecRegistry.decompressorRegistry())
@@ -68,32 +70,30 @@ public class GrpcWiremock implements CommandLineRunner {
 
         private void setProperties(NettyServerBuilder builder) {
             GrpcProperties.ServerProperties server = grpcProperties.getServer();
-            if (server != null) {
-                if (server.getMaxHeaderListSize() != null) {
-                    int val = Math.toIntExact(server.getMaxHeaderListSize().toBytes());
-                    LOG.info("Set maxHeaderListSize = {}", val);
-                    builder.maxHeaderListSize(val);
-                }
-                if (server.getMaxMessageSize() != null) {
-                    int val = Math.toIntExact(server.getMaxMessageSize().toBytes());
-                    LOG.info("Set maxMessageSize = {}", val);
-                    builder.maxMessageSize(val);
-                }
-                if (server.getMaxInboundMetadataSize() != null) {
-                    int val = Math.toIntExact(server.getMaxInboundMetadataSize().toBytes());
-                    LOG.info("Set maxInboundMetadataSize = {}", val);
-                    builder.maxInboundMetadataSize(val);
-                }
-                if (server.getMaxInboundMessageSize() != null) {
-                    int val = Math.toIntExact(server.getMaxInboundMessageSize().toBytes());
-                    LOG.info("Set maxInboundMessageSize = {}", val);
-                    builder.maxInboundMessageSize(val);
-                }
+            if (server.getMaxHeaderListSize() != null) {
+                int val = Math.toIntExact(server.getMaxHeaderListSize().toBytes());
+                LOG.info("Set maxHeaderListSize = {}", val);
+                builder.maxHeaderListSize(val);
+            }
+            if (server.getMaxMessageSize() != null) {
+                int val = Math.toIntExact(server.getMaxMessageSize().toBytes());
+                LOG.info("Set maxMessageSize = {}", val);
+                builder.maxMessageSize(val);
+            }
+            if (server.getMaxInboundMetadataSize() != null) {
+                int val = Math.toIntExact(server.getMaxInboundMetadataSize().toBytes());
+                LOG.info("Set maxInboundMetadataSize = {}", val);
+                builder.maxInboundMetadataSize(val);
+            }
+            if (server.getMaxInboundMessageSize() != null) {
+                int val = Math.toIntExact(server.getMaxInboundMessageSize().toBytes());
+                LOG.info("Set maxInboundMessageSize = {}", val);
+                builder.maxInboundMessageSize(val);
             }
         }
 
         private String summary(Server server) {
-            return "Started " + server + "\nRegistered services:\n" +
+            return "gRPC server is started: " + server + "\nRegistered services:\n" +
                 server.getServices().stream().map(s -> " * " + s.getServiceDescriptor().getName()).collect(joining("\n"));
         }
 
@@ -124,7 +124,6 @@ public class GrpcWiremock implements CommandLineRunner {
                 }
                 LOG.info("gRPC server stopped.");
             });
-
         }
     }
 

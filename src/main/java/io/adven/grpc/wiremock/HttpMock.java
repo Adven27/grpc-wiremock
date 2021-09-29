@@ -1,20 +1,17 @@
 package io.adven.grpc.wiremock;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
+import com.github.tomakehurst.wiremock.standalone.CommandLineOptions;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
-import io.adven.grpc.wiremock.properties.WiremockProperties;
+import io.adven.grpc.wiremock.configurer.WiremockConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -22,35 +19,52 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import java.util.Map;
 
 @Component
 public class HttpMock {
     private static final Logger LOG = LoggerFactory.getLogger(HttpMock.class);
-    private final WireMockServer server;
-    private final HttpClient httpClient;
+    private static final String PREFIX = "wiremock_";
+    private final WiremockConfigurer configurer;
+    private WireMockServer server;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public HttpMock(WiremockProperties properties) {
-        WireMockConfiguration config = wireMockConfig()
-            .usingFilesUnderDirectory("/wiremock")
-            .extensions(new ResponseTemplateTransformer(true))
-            .port(8888)
-            .notifier(new Slf4jNotifier(properties.isVerbose()))
-            .stubRequestLoggingDisabled(properties.isStubRequestLoggingDisabled())
-            .asynchronousResponseEnabled(properties.isAsynchronousResponseEnabled())
-            .asynchronousResponseThreads(properties.getAsynchronousResponseThreads());
-
-        if (properties.isDisableRequestJournal()) {
-            config.disableRequestJournal();
-        }
-        server = new WireMockServer(config);
-        httpClient = HttpClient.newHttpClient();
+    public HttpMock(WiremockConfigurer configurer) {
+        this.configurer = configurer;
     }
 
-    @PostConstruct
-    public void init() {
+    public void start() {
+        String[] args = configurer.configure(envOptions());
+        LOG.info("Starting WireMock server with options:\n{}", String.join("\n", args));
+        CommandLineOptions options = new CommandLineOptions(args);
+        server = new WireMockServer(options);
         server.start();
+        LOG.info("WireMock server is started:\n{}", setActualPort(options));
+    }
+
+    private CommandLineOptions setActualPort(CommandLineOptions options) {
+        if (!options.getHttpDisabled()) {
+            options.setActualHttpPort(server.port());
+        }
+        if (options.httpsSettings().enabled()) {
+            options.setActualHttpsPort(server.httpsPort());
+        }
+        return options;
+    }
+
+    private String[] envOptions() {
+        return System.getenv().entrySet().stream()
+            .filter(it -> it.getKey().toLowerCase().startsWith(PREFIX))
+            .map(this::toWiremockOption)
+            .toArray(String[]::new);
+    }
+
+    private String toWiremockOption(Map.Entry<String, String> it) {
+        return "--" + it.getKey().toLowerCase().substring(PREFIX.length()) + (nullOrEmpty(it.getValue()) ? "" : "=" + it.getValue());
+    }
+
+    private boolean nullOrEmpty(String value) {
+        return value == null || value.equals("");
     }
 
     @PreDestroy

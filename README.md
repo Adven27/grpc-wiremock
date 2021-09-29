@@ -110,22 +110,31 @@ docker run \
 ```
 ## How To:
 
-#### 1. Change grpc server properties
+#### 1. Configuring gRPC server
 
-Currently, following grpc server properties are supported<sup>*</sup>:
+Currently, following grpc server properties are supported:
 
 ```properties
+GRPC_SERVER_PORT
 GRPC_SERVER_MAXHEADERLISTSIZE
 GRPC_SERVER_MAXMESSAGESIZE
 GRPC_SERVER_MAXINBOUNDMETADATASIZE
 GRPC_SERVER_MAXINBOUNDMESSAGESIZE
 ```
-<sub>*The first two are deprecated in favor of the last two</sub>
 
 Could be used like this:
 
 ```posh
 docker run -e GRPC_SERVER_MAXHEADERLISTSIZE=1000 adven27/grpc-wiremock
+```
+
+### 3. Configuring WireMock server
+
+WireMock server may be configured by passing [command line options](http://wiremock.org/docs/running-standalone/) 
+prefixed by `wiremock_`:
+
+```posh
+docker run -e WIREMOCK_DISABLE-REQUEST-LOGGING -e WIREMOCK_PORT=0 adven27/grpc-wiremock
 ```
 
 #### 2. Speed up container start
@@ -162,10 +171,9 @@ docker run -e SPRING_PROFILES_ACTIVE=load adven27/grpc-wiremock
 ```
 ```posh
 docker run \
-    -e WIREMOCK_SERVER_DISABLEREQUESTJOURNAL=true \
-    -e WIREMOCK_SERVER_ASYNCHRONOUSRESPONSEENABLED=true \
-    -e WIREMOCK_SERVER_ASYNCHRONOUSRESPONSETHREADS=10 \
-    -e WIREMOCK_SERVER_STUBREQUESTLOGGINGDISABLED=true \
-    -e WIREMOCK_SERVER_VERBOSE=false \
-    adven27/grpc-wiremock
+  -e WIREMOCK_NO-REQUEST-JOURNAL \
+  -e WIREMOCK_DISABLE-REQUEST-LOGGING \
+  -e WIREMOCK_ASYNC-RESPONSE-ENABLED \
+  -e WIREMOCK_ASYNC-RESPONSE-THREADS=10 \
+  adven27/grpc-wiremock
 ```

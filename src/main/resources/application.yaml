@@ -4,15 +4,10 @@ spring:
 #
 logging.level.io.grpc: info
 #
-wiremock:
-  server:
-    disableRequestJournal: false
-    asynchronousResponseEnabled: false
-    asynchronousResponseThreads: 10
-    stubRequestLoggingDisabled: false
-    verbose: true
-# Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
 grpc:
+  server:
+    port: 50000
+  # Source: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
   error-code-by:
     http:
       status-code:
@@ -32,11 +27,3 @@ grpc:
 spring.config.activate.on-profile: load
 #
 logging.level.io.adven.grpc.wiremock.HttpMock: warn
-#
-wiremock:
-  server:
-    disableRequestJournal: true
-    asynchronousResponseEnabled: true
-    asynchronousResponseThreads: 10
-    stubRequestLoggingDisabled: true
-    verbose: false
