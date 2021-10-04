@@ -20,6 +20,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import static io.adven.grpc.wiremock.HeaderPropagationInterceptor.HEADERS;
 
 @Component
 public class HttpMock {
@@ -73,13 +76,17 @@ public class HttpMock {
     }
 
     public Message send(Object message, String path, Class<?> aClass) throws IOException, InterruptedException {
-        return ProtoJsonUtil.fromJson(request(path, message).body(), aClass);
+        return ProtoJsonUtil.fromJson(request(path, message, HEADERS.get()).body(), aClass);
     }
 
-    private HttpResponse<String> request(String path, Object message) throws IOException, InterruptedException {
-        LOG.info("Grpc request {}:\n{}", path, message);
+    private HttpResponse<String> request(String path, Object message, Map<String, String> headers) throws IOException, InterruptedException {
+        LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
         final HttpResponse<String> response = httpClient.send(
-            HttpRequest.newBuilder().uri(URI.create(server.baseUrl() + "/" + path)).POST(asJson(message)).build(),
+            HttpRequest.newBuilder()
+                .uri(URI.create(server.baseUrl() + "/" + path))
+                .POST(asJson(message))
+                .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
+                .build(),
             HttpResponse.BodyHandlers.ofString()
         );
         if (response.statusCode() != 200) {

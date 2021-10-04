@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
+import static io.grpc.ServerInterceptors.intercept;
 import static java.util.stream.Collectors.joining;
 
 @SpringBootApplication
@@ -62,7 +63,7 @@ public class GrpcWiremock implements CommandLineRunner {
                 .addService(ProtoReflectionService.newInstance());
 
             setProperties(builder);
-            services.forEach(builder::addService);
+            services.forEach(s -> builder.addService(intercept(s, new HeaderPropagationInterceptor())));
             server = builder.build().start();
             LOG.info(summary(server));
             startDaemonAwaitThread();

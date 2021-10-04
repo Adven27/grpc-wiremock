@@ -24,6 +24,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
     "request": {
         "method": "POST",
         "url": "/BalanceService/getUserBalance",
+        "headers": {"withAmount": {"matches": "\\d+\\.*\\d*"} },
         "bodyPatterns" : [ {
             "equalToJson" : { "id": "1", "currency": "EUR" }
         } ]
@@ -32,7 +33,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
         "status": 200,
         "jsonBody": { 
             "balance": { 
-                "amount": { "value": { "decimal" : "100.0" }, "value_present": true },
+                "amount": { "value": { "decimal" : "{{request.headers.withAmount}}" }, "value_present": true },
                 "currency": { "value": "EUR", "value_present": true }
             } 
         }
@@ -42,7 +43,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
 
 3) Check 
 ```json
-grpcurl -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
+grpcurl -H 'withAmount: 100.0' -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
 ```
 
 Should get response:
