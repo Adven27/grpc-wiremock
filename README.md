@@ -24,7 +24,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
     "request": {
         "method": "POST",
         "url": "/BalanceService/getUserBalance",
-        "headers": {"withAmount": {"matches": "\\d+\\.*\\d*"} },
+        "headers": {"withAmount": {"matches": "\\d+\\.?\\d*"} },
         "bodyPatterns" : [ {
             "equalToJson" : { "id": "1", "currency": "EUR" }
         } ]
