@@ -22,11 +22,21 @@ public class Translator{
             this.httpMock = httpMock;
         }
 
-        private void redirect(ProceedingJoinPoint jp, String service, Map<String, Class> respTypes) throws Throwable {
+        private void redirect(ProceedingJoinPoint jp, String service, Map<String, Class> respTypes, Map<String, String> methodTypes) throws Throwable {
             Object[] args = jp.getArgs();
             String method = jp.getStaticPart().getSignature().getName();
+            String methodType = methodTypes.get(method.toLowerCase());
             ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
-            observer.onNext(httpMock.send(args[0], service + "/" + method, respTypes.get(method.toLowerCase())));
+            if (methodType.equals("SERVER_STREAMING")) {
+                int streamCursor = 0;
+                HttpMock.Response response;
+                do {
+                    response = httpMock.request(service + "/" + method + "/" + Integer.toString(++streamCursor), args[0]);
+                    observer.onNext(response.getMessage(respTypes.get(method.toLowerCase())));
+                } while(response.isContinueStreaming() && !observer.isCancelled());
+            } else {
+                observer.onNext(httpMock.request(service + "/" + method, args[0]).getMessage(respTypes.get(method.toLowerCase())));
+            }
             observer.onCompleted();
         }
         @decorate_services@

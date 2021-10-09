@@ -61,8 +61,11 @@ task generateJava(type: Copy) {
         private final Map<String, Class> @fullServiceName@RespTypes = new HashMap<>(){{
             @resp_types@
         }}; 
+        private final Map<String, String> @fullServiceName@MethodTypes = new HashMap<>(){{
+            @method_types@
+        }}; 
         @Around("execution(* @package@.@serviceName@Grpc.@serviceName@ImplBase.*(..))")
-        public void redirect@fullServiceName@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@serviceName@", @fullServiceName@RespTypes); }
+        public void redirect@fullServiceName@(ProceedingJoinPoint jp) throws Throwable { redirect(jp, "@serviceName@", @fullServiceName@RespTypes, @fullServiceName@MethodTypes); }
         """
 
         def importServiceTemplate = "import @package@.@serviceName@Grpc;\n"
@@ -80,6 +83,7 @@ task generateJava(type: Copy) {
             def text = file.text
             def rpcMethodAnnotation = "@io.grpc.stub.annotations.RpcMethod("
             Map<String, String> respTypes = new HashMap<>()
+            Map<String, String> methodTypes = new HashMap<>()
             while (text.indexOf(rpcMethodAnnotation) >= 0) {
                 def rest = text.substring(text.indexOf(rpcMethodAnnotation) + rpcMethodAnnotation.length())
                 def descriptor = rest.substring(0, rest.indexOf(")")).split(',').inject([:]) { map, token ->
@@ -88,6 +92,7 @@ task generateJava(type: Copy) {
                 }
                 def method = descriptor.fullMethodName.substring("SERVICE_NAME + '/' + \"".length(), descriptor.fullMethodName.length() - 1)
                 respTypes[method] = descriptor.responseType
+                methodTypes[method] = descriptor.methodType.tokenize('.').last()
                 text = rest
             }
             decorate_services += callDecoratorTemplate
@@ -95,6 +100,7 @@ task generateJava(type: Copy) {
                     .replace("@serviceName@", serviceName)
                     .replace("@fullServiceName@", fullServiceName)
                     .replace("@resp_types@", respTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", $v);" }.join("\n"))
+                    .replace("@method_types@", methodTypes.collect { k, v -> "put(\"${k.toLowerCase()}\", \"$v\");" }.join("\n"))
 
             import_services += importServiceTemplate.replace("@package@", pkg).replace("@serviceName@", serviceName)
             services += serviceTemplate
