@@ -75,24 +75,36 @@ public class HttpMock {
         server.stop();
     }
 
-    public Message send(Object message, String path, Class<?> aClass) throws IOException, InterruptedException {
-        return ProtoJsonUtil.fromJson(request(path, message, HEADERS.get()).body(), aClass);
+    public final class Response {
+        private HttpResponse<String> httpResponse;
+
+        public Response(HttpResponse<String> httpResponse) {
+            this.httpResponse = httpResponse;
+        }
+
+        public Message getMessage(Class<?> aClass) {
+            if (httpResponse.statusCode() != 200 && !isContinueStreaming()) {
+                throw new BadHttpResponseException(httpResponse.statusCode(), httpResponse.body());
+            }
+            return ProtoJsonUtil.fromJson(httpResponse.body(), aClass);
+        }
+
+        public boolean isContinueStreaming() {
+            return httpResponse.statusCode() == 600;
+        }
     }
 
-    private HttpResponse<String> request(String path, Object message, Map<String, String> headers) throws IOException, InterruptedException {
+    public Response request(String path, Object message) throws IOException, InterruptedException {
+        Map<String, String> headers = HEADERS.get();
         LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
-        final HttpResponse<String> response = httpClient.send(
+        return new Response(httpClient.send(
             HttpRequest.newBuilder()
                 .uri(URI.create(server.baseUrl() + "/" + path))
                 .POST(asJson(message))
                 .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
                 .build(),
             HttpResponse.BodyHandlers.ofString()
-        );
-        if (response.statusCode() != 200) {
-            throw new BadHttpResponseException(response.statusCode(), response.body());
-        }
-        return response;
+        ));
     }
 
     private HttpRequest.BodyPublisher asJson(Object arg) throws IOException {
