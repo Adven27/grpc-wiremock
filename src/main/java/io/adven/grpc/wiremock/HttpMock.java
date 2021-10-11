@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -22,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import static io.adven.grpc.wiremock.HeaderPropagationInterceptor.HEADERS;
 
@@ -86,7 +89,7 @@ public class HttpMock {
                     .POST(asJson(message))
                     .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
                     .build(),
-                HttpResponse.BodyHandlers.ofString()
+                HttpResponse.BodyHandlers.ofInputStream()
             )
         );
     }
@@ -96,21 +99,33 @@ public class HttpMock {
     }
 
     public static final class Response {
-        private final HttpResponse<String> httpResponse;
+        private final HttpResponse<InputStream> httpResponse;
 
-        public Response(HttpResponse<String> httpResponse) {
+        public Response(HttpResponse<InputStream> httpResponse) {
             this.httpResponse = httpResponse;
         }
 
         public Message getMessage(Class<?> aClass) {
             if (httpResponse.statusCode() == 200) {
-                return ProtoJsonUtil.fromJson(httpResponse.body(), aClass);
+                return ProtoJsonUtil.fromJson(getBody(), aClass);
             }
-            throw new BadHttpResponseException(httpResponse.statusCode(), httpResponse.body());
+            throw new BadHttpResponseException(httpResponse.statusCode(), getBody());
         }
 
         public int streamSize() {
             return httpResponse.headers().firstValue("streamSize").map(Integer::valueOf).orElse(1);
+        }
+
+        private String getBody() {
+            try {
+                InputStream bodyStream = httpResponse.body();
+                if (httpResponse.headers().firstValue("Content-Encoding").orElse("").equals("gzip")) {
+                    bodyStream = new GZIPInputStream(bodyStream);
+                }
+                return new String(bodyStream.readAllBytes());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
