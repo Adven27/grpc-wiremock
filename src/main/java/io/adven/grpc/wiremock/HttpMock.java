@@ -19,6 +19,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -75,36 +76,42 @@ public class HttpMock {
         server.stop();
     }
 
-    public final class Response {
-        private HttpResponse<String> httpResponse;
+    public Response request(String path, Object message, Map<String, String> headers) throws IOException, InterruptedException {
+        headers.putAll(HEADERS.get());
+        LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
+        return new Response(
+            httpClient.send(
+                HttpRequest.newBuilder()
+                    .uri(URI.create(server.baseUrl() + "/" + path))
+                    .POST(asJson(message))
+                    .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
+                    .build(),
+                HttpResponse.BodyHandlers.ofString()
+            )
+        );
+    }
+
+    public Response request(String path, Object message) throws IOException, InterruptedException {
+        return request(path, message, new HashMap<>());
+    }
+
+    public static final class Response {
+        private final HttpResponse<String> httpResponse;
 
         public Response(HttpResponse<String> httpResponse) {
             this.httpResponse = httpResponse;
         }
 
         public Message getMessage(Class<?> aClass) {
-            if (httpResponse.statusCode() != 200 && !isContinueStreaming()) {
-                throw new BadHttpResponseException(httpResponse.statusCode(), httpResponse.body());
+            if (httpResponse.statusCode() == 200) {
+                return ProtoJsonUtil.fromJson(httpResponse.body(), aClass);
             }
-            return ProtoJsonUtil.fromJson(httpResponse.body(), aClass);
+            throw new BadHttpResponseException(httpResponse.statusCode(), httpResponse.body());
         }
 
-        public boolean isContinueStreaming() {
-            return httpResponse.statusCode() == 600;
+        public int streamSize() {
+            return httpResponse.headers().firstValue("streamSize").map(Integer::valueOf).orElse(1);
         }
-    }
-
-    public Response request(String path, Object message) throws IOException, InterruptedException {
-        Map<String, String> headers = HEADERS.get();
-        LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
-        return new Response(httpClient.send(
-            HttpRequest.newBuilder()
-                .uri(URI.create(server.baseUrl() + "/" + path))
-                .POST(asJson(message))
-                .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
-                .build(),
-            HttpResponse.BodyHandlers.ofString()
-        ));
     }
 
     private HttpRequest.BodyPublisher asJson(Object arg) throws IOException {

@@ -112,7 +112,7 @@ docker run \
 ```
 ## How To:
 
-### 1. Configuring gRPC server
+### 1. Configure gRPC server
 
 Currently, following grpc server properties are supported:
 
@@ -130,7 +130,7 @@ Could be used like this:
 docker run -e GRPC_SERVER_MAXHEADERLISTSIZE=1000 adven27/grpc-wiremock
 ```
 
-### 2. Configuring WireMock server
+### 2. Configure WireMock server
 
 WireMock server may be configured by passing [command line options](http://wiremock.org/docs/running-standalone/) 
 prefixed by `wiremock_`:
@@ -139,12 +139,61 @@ prefixed by `wiremock_`:
 docker run -e WIREMOCK_DISABLE-REQUEST-LOGGING -e WIREMOCK_PORT=0 adven27/grpc-wiremock
 ```
 
-### 3. Speed up container start
+### 3. Mock server-side streaming:
+
+Given the service:
+
+```protobuf
+service WalletService {
+  rpc searchTransaction (SearchTransactionRequest) returns (stream SearchTransactionResponse) {}
+}
+```
+
+Then the following stub may be provided, where `response.headers.streamSize` specifies 
+how many responses should be returned during the stream (`1` - if absent).
+
+The current response iteration number is available in `request.headers.streamCursor`:
+
+```json
+curl -X POST http://localhost:8888/__admin/mappings \
+  -d '{
+  "request": {
+    "method": "POST",
+    "url": "/WalletService/searchTransaction"
+  },
+  "response": {
+    "fixedDelayMilliseconds": 1000,
+    "headers": {"streamSize": "5" },
+    "jsonBody": {
+      "transactions": [
+        {
+          "id": "{{request.headers.streamCursor}}",
+          "userId": "1",
+          "currency": "EUR",
+          "amount": {
+            "decimal": "{{request.headers.streamCursor}}00"
+          }
+        },
+        {
+          "id": "100{{request.headers.streamCursor}}",
+          "userId": "2",
+          "currency": "EUR",
+          "amount": {
+            "decimal": "200"
+          }
+        }
+      ]
+    }
+  }
+}'
+```
+
+### 4. Speed up container start
 
 In case you don't need to change proto files, you can build your own image with precompiled protos.  
 See an [example](/example/Dockerfile)
 
-### 4. Use with snappy compresser/decompresser
+### 5. Use with snappy compresser/decompresser
 
 Snappy support can be enabled using `EXTERNAL_CODECS` env variable as follows:
 ```posh
@@ -164,7 +213,7 @@ Also in docker-compose:
 <sub>*gzip compression supported by default</sub>
 
 
-### 5. Use in load testing
+### 6. Use in load testing
 
 To increase performance some Wiremock related options may be tuned either directly or by enabling the "load" profile. 
 Next two commands are identical:

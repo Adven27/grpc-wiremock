@@ -14,8 +14,9 @@ import java.util.Map;
 public class Translator{
     @services@
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Aspect @Component
-    class WireMockTranslator {
+    static class WireMockTranslator {
         private final HttpMock httpMock;
 
         public WireMockTranslator(HttpMock httpMock) {
@@ -23,19 +24,22 @@ public class Translator{
         }
 
         private void redirect(ProceedingJoinPoint jp, String service, Map<String, Class> respTypes, Map<String, String> methodTypes) throws Throwable {
-            Object[] args = jp.getArgs();
-            String method = jp.getStaticPart().getSignature().getName();
-            String methodType = methodTypes.get(method.toLowerCase());
-            ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
+            final Object[] args = jp.getArgs();
+            final String method = jp.getStaticPart().getSignature().getName();
+            final String path = service + "/" + method;
+            final String methodType = methodTypes.get(method.toLowerCase());
+            final Class respType = respTypes.get(method.toLowerCase());
+            final ServerCallStreamObserver observer = (ServerCallStreamObserver) args[1];
+
             if (methodType.equals("SERVER_STREAMING")) {
-                int streamCursor = 0;
+                int streamCursor = 1;
                 HttpMock.Response response;
                 do {
-                    response = httpMock.request(service + "/" + method + "/" + Integer.toString(++streamCursor), args[0]);
-                    observer.onNext(response.getMessage(respTypes.get(method.toLowerCase())));
-                } while(response.isContinueStreaming() && !observer.isCancelled());
+                    response = httpMock.request(path, args[0], new HashMap(Map.of("streamCursor", "" + streamCursor++)));
+                    observer.onNext(response.getMessage(respType));
+                } while (streamCursor <= response.streamSize() && !observer.isCancelled());
             } else {
-                observer.onNext(httpMock.request(service + "/" + method, args[0]).getMessage(respTypes.get(method.toLowerCase())));
+                observer.onNext(httpMock.request(path, args[0]).getMessage(respType));
             }
             observer.onCompleted();
         }

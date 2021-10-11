@@ -1,25 +1,23 @@
 {
-  "priority": 100,
   "request": {
     "method": "POST",
-    "urlPathPattern": "/WalletService/searchTransaction/.*"
+    "url": "/WalletService/searchTransaction"
   },
   "response": {
-    "status": 600,
     "fixedDelayMilliseconds": 1000,
-    "transformers": ["response-template"],
+    "headers": {"streamSize": "5"},
     "jsonBody": {
       "transactions": [
         {
-          "id": "{{request.path.[2]}}",
+          "id": "{{request.headers.streamCursor}}",
           "userId": "1",
           "currency": "EUR",
           "amount": {
-            "decimal": "100"
+            "decimal": "{{request.headers.streamCursor}}00"
           }
         },
         {
-          "id": "100000{{request.path.[2]}}",
+          "id": "100{{request.headers.streamCursor}}",
           "userId": "2",
           "currency": "EUR",
           "amount": {
