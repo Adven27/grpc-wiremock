@@ -78,6 +78,7 @@ public class HttpMock {
 
     public Response request(String path, Object message, Map<String, String> headers) throws IOException, InterruptedException {
         headers.putAll(HEADERS.get());
+        headers.remove("accept-encoding");
         LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
         return new Response(
             httpClient.send(
