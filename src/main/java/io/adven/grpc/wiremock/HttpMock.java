@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -81,7 +81,6 @@ public class HttpMock {
 
     public Response request(String path, Object message, Map<String, String> headers) throws IOException, InterruptedException {
         headers.putAll(HEADERS.get());
-        headers.remove("accept-encoding");
         LOG.info("Grpc request {}:\nHeaders: {}\nMessage:\n{}", path, headers, message);
         return new Response(
             httpClient.send(
@@ -118,15 +117,15 @@ public class HttpMock {
         }
 
         private String getBody() {
-            try {
-                InputStream bodyStream = httpResponse.body();
-                if (httpResponse.headers().firstValue("Content-Encoding").orElse("").equals("gzip")) {
-                    bodyStream = new GZIPInputStream(bodyStream);
-                }
-                return new String(bodyStream.readAllBytes());
+            try (InputStream is = isGzip() ? new GZIPInputStream(httpResponse.body()) : httpResponse.body()) {
+                return new String(is.readAllBytes());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+        }
+
+        private boolean isGzip() {
+            return httpResponse.headers().firstValue("Content-Encoding").orElse("").equals("gzip");
         }
     }
 
