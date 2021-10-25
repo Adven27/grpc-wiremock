@@ -1,6 +1,6 @@
 [![Stability: Maintenance](https://masterminds.github.io/stability/maintenance.svg)](https://masterminds.github.io/stability/maintenance.html)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/adven27/grpc-wiremock?label=build&logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/builds)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.0?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.1?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
 
 # Overview
 grpc-wiremock is a **mock server** for **GRPC** services implemented as a wrapper around the [WireMock](http://wiremock.org) http server.
@@ -18,7 +18,7 @@ docker run -p 8888:8888 -p 50000:50000 -v $(pwd)/example/proto:/proto -v $(pwd)/
 ```
 
 2) Stub 
-```json
+```posh
 curl -X POST http://localhost:8888/__admin/mappings \
   -d '{
     "request": {
@@ -42,7 +42,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
 ```
 
 3) Check 
-```json
+```posh
 grpcurl -H 'withAmount: 100.0' -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
 ```
 
@@ -154,7 +154,7 @@ how many responses should be returned during the stream (`1` - if absent).
 
 The current response iteration number is available in `request.headers.streamCursor`:
 
-```json
+```posh
 curl -X POST http://localhost:8888/__admin/mappings \
   -d '{
   "request": {
