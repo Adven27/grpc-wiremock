@@ -26,4 +26,4 @@ grpc:
 ---
 spring.config.activate.on-profile: load
 #
-logging.level.io.adven.grpc.wiremock.HttpMock: warn
+logging.level.io.adven.grpc: warn

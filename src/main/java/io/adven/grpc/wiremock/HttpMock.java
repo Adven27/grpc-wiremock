@@ -2,11 +2,8 @@ package io.adven.grpc.wiremock;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.standalone.CommandLineOptions;
-import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import com.google.protobuf.util.JsonFormat;
 import io.adven.grpc.wiremock.configurer.WiremockConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +13,6 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -33,11 +29,13 @@ public class HttpMock {
     private static final Logger LOG = LoggerFactory.getLogger(HttpMock.class);
     private static final String PREFIX = "wiremock_";
     private final WiremockConfigurer configurer;
+    private final ProtoJsonConverter converter;
     private WireMockServer server;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public HttpMock(WiremockConfigurer configurer) {
+    public HttpMock(WiremockConfigurer configurer, ProtoJsonConverter converter) {
         this.configurer = configurer;
+        this.converter = converter;
     }
 
     public void start() {
@@ -90,7 +88,8 @@ public class HttpMock {
                     .headers(headers.entrySet().stream().flatMap(e -> Stream.of(e.getKey(), e.getValue())).toArray(String[]::new))
                     .build(),
                 HttpResponse.BodyHandlers.ofInputStream()
-            )
+            ),
+            converter
         );
     }
 
@@ -100,14 +99,16 @@ public class HttpMock {
 
     public static final class Response {
         private final HttpResponse<InputStream> httpResponse;
+        private final ProtoJsonConverter converter;
 
-        public Response(HttpResponse<InputStream> httpResponse) {
+        public Response(HttpResponse<InputStream> httpResponse, ProtoJsonConverter converter) {
             this.httpResponse = httpResponse;
+            this.converter = converter;
         }
 
         public Message getMessage(Class<?> aClass) {
             if (httpResponse.statusCode() == 200) {
-                return ProtoJsonUtil.fromJson(getBody(), aClass);
+                return converter.fromJson(getBody(), aClass);
             }
             throw new BadHttpResponseException(httpResponse.statusCode(), getBody());
         }
@@ -130,26 +131,6 @@ public class HttpMock {
     }
 
     private HttpRequest.BodyPublisher asJson(Object arg) throws IOException {
-        return HttpRequest.BodyPublishers.ofString(ProtoJsonUtil.toJson((MessageOrBuilder) arg));
-    }
-
-    private static final class ProtoJsonUtil {
-        static String toJson(MessageOrBuilder messageOrBuilder) throws IOException {
-            return JsonFormat.printer().print(messageOrBuilder);
-        }
-
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        static <T extends Message> T fromJson(String json, Class<?> clazz) {
-            try {
-                LOG.info("Converting to {} json:\n{}", clazz, json);
-                AbstractMessage.Builder builder = (AbstractMessage.Builder) clazz.getMethod("newBuilder").invoke(null);
-                JsonFormat.parser().merge(json, builder);
-                T result = (T) builder.build();
-                LOG.info("Grpc response:\n{}", result);
-                return result;
-            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | InvalidProtocolBufferException e) {
-                throw new IllegalArgumentException("Failed to convert " + json + " to " + clazz, e);
-            }
-        }
+        return HttpRequest.BodyPublishers.ofString(converter.toJson((MessageOrBuilder) arg));
     }
 }

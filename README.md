@@ -1,6 +1,6 @@
 [![Stability: Maintenance](https://masterminds.github.io/stability/maintenance.svg)](https://masterminds.github.io/stability/maintenance.html)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/adven27/grpc-wiremock?label=build&logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/builds)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.1?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.2?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
 
 # Overview
 grpc-wiremock is a **mock server** for **GRPC** services implemented as a wrapper around the [WireMock](http://wiremock.org) http server.
@@ -26,7 +26,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
         "url": "/BalanceService/getUserBalance",
         "headers": {"withAmount": {"matches": "\\d+\\.?\\d*"} },
         "bodyPatterns" : [ {
-            "equalToJson" : { "id": "1", "currency": "EUR" }
+            "equalToJson" : { "userId": "1", "currency": "EUR" }
         } ]
     },
     "response": {
@@ -212,7 +212,6 @@ Also in docker-compose:
 ```
 <sub>*gzip compression supported by default</sub>
 
-
 ### 6. Use in load testing
 
 To increase performance some Wiremock related options may be tuned either directly or by enabling the "load" profile. 
@@ -227,4 +226,24 @@ docker run \
   -e WIREMOCK_ASYNC-RESPONSE-ENABLED \
   -e WIREMOCK_ASYNC-RESPONSE-THREADS=10 \
   adven27/grpc-wiremock
+```
+
+### 7. Preserving proto field names in stubs
+
+By default, stub mappings must have proto fields references in lowerCamlCase, e.g. proto field `user_id` must be referenced as:
+
+```json
+{
+  "request": {
+    "method": "POST",
+    "url": "/BalanceService/getUserBalance",
+    "bodyPatterns": [{"equalToJson": { "userId": "1" }}]
+  }
+}
+```
+
+To preserve proto field names the following env variable could be used:
+
+```posh
+docker run -e JSON_PRESERVING_PROTO_FIELD_NAMES=true adven27/grpc-wiremock
 ```

@@ -15,7 +15,7 @@ service BalanceService {
 }
 
 message UserBalanceRequest {
-  uint64 id = 1;
+  uint64 user_id = 1;
   string currency = 2;
 }
 
@@ -47,7 +47,7 @@ message TransactionResponse {
   uint64 userId = 2;
   string currency = 3;
   common.proto.ProtoBigDecimal amount = 4;
-  common.proto.ProtoTimestamp transactionDate = 5;
+  common.proto.ProtoTimestamp transaction_date = 5;
 }
 
 message SearchTransactionRequest {
