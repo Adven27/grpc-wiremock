@@ -81,6 +81,14 @@ task generateJava(type: Copy) {
             println "Parsed package = [$pkg], serviceName = [$serviceName] and fullServiceName = [$fullServiceName]"
 
             def text = file.text
+
+            // Even though the file name looked like a grpc service class, dont process it
+            // if you dont find a reference to an abstract class.
+            if (text.indexOf('public static abstract class') == -1) {
+                println "Skipping processing $file.path because its not a Service class."
+                return
+            }
+
             def rpcMethodAnnotation = "@io.grpc.stub.annotations.RpcMethod("
             Map<String, String> respTypes = new HashMap<>()
             Map<String, String> methodTypes = new HashMap<>()
