@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '2.5.6'
+    id 'org.springframework.boot' version '2.6.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'com.google.protobuf' version '0.8.16'
@@ -7,13 +7,13 @@ plugins {
 
 group = 'io.adven.grpc.wiremock'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
 }
 
-def grpcVersion = '1.42.1'
+def grpcVersion = '1.43.2'
 def wiremockVersion = '2.32.0'
 def protobufVersion = '3.16.0'
 def protocVersion = protobufVersion
