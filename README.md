@@ -1,6 +1,6 @@
 [![Stability: Maintenance](https://masterminds.github.io/stability/maintenance.svg)](https://masterminds.github.io/stability/maintenance.html)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/adven27/grpc-wiremock?label=build&logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/builds)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.4?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/adven27/grpc-wiremock/1.3.6?logo=docker)](https://hub.docker.com/repository/docker/adven27/grpc-wiremock/general)
 
 # Overview
 grpc-wiremock is a **mock server** for **GRPC** services implemented as a wrapper around the [WireMock](http://wiremock.org) http server.
@@ -71,19 +71,19 @@ Stubbing should be done via [WireMock JSON API](http://wiremock.org/docs/stubbin
 
 Default error (not `200 OK`) mapping is based on https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto :
 
-| HTTP Status Code         | GRPC Status       | 
-| ------------------------ |:-----------------:|
-| 400 Bad Request          | INVALID_ARGUMENT  |
-| 401 Unauthorized         | UNAUTHENTICATED   |
-| 403 Forbidden            | PERMISSION_DENIED |
-| 404 Not Found            | NOT_FOUND         |
-| 409 Conflict             | ALREADY_EXISTS    |
-| 429 Too Many Requests    | RESOURCE_EXHAUSTED|
-| 499 Client Closed Request| CANCELLED         |
-| 500 Internal Server Error| INTERNAL          |
-| 501 Not Implemented      | UNIMPLEMENTED     |
-| 503 Service Unavailable  | UNAVAILABLE       |
-| 504 Gateway Timeout      | DEADLINE_EXCEEDED |
+| HTTP Status Code          | GRPC Status        | 
+|---------------------------|:-------------------|
+| 400 Bad Request           | INVALID_ARGUMENT   |
+| 401 Unauthorized          | UNAUTHENTICATED    |
+| 403 Forbidden             | PERMISSION_DENIED  |
+| 404 Not Found             | NOT_FOUND          |
+| 409 Conflict              | ALREADY_EXISTS     |
+| 429 Too Many Requests     | RESOURCE_EXHAUSTED |
+| 499 Client Closed Request | CANCELLED          |
+| 500 Internal Server Error | INTERNAL           |
+| 501 Not Implemented       | UNIMPLEMENTED      |
+| 503 Service Unavailable   | UNAVAILABLE        |
+| 504 Gateway Timeout       | DEADLINE_EXCEEDED  |
 
 And could be overridden or augmented by overriding or augmenting the following properties:
 ```yaml
