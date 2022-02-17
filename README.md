@@ -43,7 +43,7 @@ curl -X POST http://localhost:8888/__admin/mappings \
 
 3) Check 
 ```posh
-grpcurl -H 'withAmount: 100.0' -plaintext -d '{"id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
+grpcurl -H 'withAmount: 100.0' -plaintext -d '{"user_id": 1, "currency": "EUR"}' localhost:50000 api.wallet.BalanceService/getUserBalance
 ```
 
 Should get response:
