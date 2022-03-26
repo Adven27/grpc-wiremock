@@ -1,4 +1,4 @@
-FROM gradle:7.3.3-jdk17 as cache
+FROM gradle:7.4.1-jdk17 as cache
 RUN mkdir -p /home/gradle/cache_home
 RUN mkdir -p /proto
 RUN touch /proto/any.proto

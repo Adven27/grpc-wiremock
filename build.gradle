@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-def grpcVersion = '1.43.2'
+def grpcVersion = '1.44.1'
 def wiremockVersion = '2.32.0'
 def protobufVersion = '3.16.0'
 def protocVersion = protobufVersion
@@ -124,3 +124,7 @@ task generateJava(type: Copy) {
 
 compileJava.dependsOn 'generateJava'
 generateJava.dependsOn 'generateProto'
+
+bootRun {
+    systemProperty 'jdk.httpclient.allowRestrictedHeaders', 'connection,content-length,expect,host,upgrade'
+}
