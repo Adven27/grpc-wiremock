@@ -17,6 +17,8 @@ def grpcVersion = '1.44.1'
 def wiremockVersion = '2.32.0'
 def protobufVersion = '3.16.0'
 def protocVersion = protobufVersion
+def protobufValidationVersion = '0.6.7'
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
@@ -24,12 +26,19 @@ dependencies {
     implementation "io.grpc:grpc-all:$grpcVersion"
     implementation "com.github.tomakehurst:wiremock-jre8-standalone:$wiremockVersion"
     implementation 'org.xerial.snappy:snappy-java:1.1.8.4'
+    implementation 'io.envoyproxy.protoc-gen-validate:pgv-java-grpc:${protobufValidationVersion}'
 }
 
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
-    plugins { grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" } }
-    generateProtoTasks { all()*.plugins { grpc { outputSubDir = 'java' } } }
+    plugins { 
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" } 
+        pgv { artifact = 'io.envoyproxy.protoc-gen-validate:protoc-gen-validate:${protobufValidationVersion}' }
+    }
+    generateProtoTasks { all()*.plugins { 
+        grpc { outputSubDir = 'java' } 
+        pgv { option 'lang=java' }
+    } }
     generatedFilesBaseDir = 'src'
 }
 
